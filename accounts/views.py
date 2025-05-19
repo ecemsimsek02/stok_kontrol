@@ -1,269 +1,228 @@
-# Django core imports
+import json
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
-
-# Authentication and permissions
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-
-# Class-based views
-from django.views.generic import (
-    ListView,
-    CreateView,
-    UpdateView,
-    DeleteView
-)
-
-# Third-party packages
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView 
 from django_tables2 import SingleTableView
 from django_tables2.export.views import ExportMixin
-
-# Local app imports
+from django.contrib.auth import login
+from .forms import CreateUserForm 
+from .forms import CustomerForm
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .forms import ProfileUpdateForm
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Profile, Customer, Vendor
-from .forms import (
-    CreateUserForm, UserUpdateForm,
-    ProfileUpdateForm, CustomerForm,
-    VendorForm
-)
-from .tables import ProfileTable
+from .forms import CreateUserForm, UserUpdateForm, ProfileUpdateForm, CustomerForm, VendorForm
+from rest_framework.permissions import AllowAny
+from .serializers import ProfileSerializer, VendorSerializer, CustomerSerializer , UserSerializer # Serializer'ı içe aktar
+from django.utils.decorators import method_decorator
+from django.shortcuts import render
+from rest_framework.permissions import AllowAny
+from rest_framework.authentication import TokenAuthentication
 
-
+# Register View
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def register(request):
-    """
-    Handle user registration.
-    If the request is POST, process the form data to create a new user.
-    Redirect to the login page on successful registration.
-    For GET requests, render the registration form.
-    """
     if request.method == 'POST':
-        form = CreateUserForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('user-login')
-    else:
-        form = CreateUserForm()
-
-    return render(request, 'accounts/register.html', {'form': form})
-
-
-@login_required
-def profile(request):
-    """
-    Render the user profile page.
-    Requires user to be logged in.
-    """
-    return render(request, 'accounts/profile.html')
+        # 1. Serializer ile veriyi doğrula
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            # 2. Kullanıcıyı oluştur
+            user = serializer.save()
+            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@login_required
-def profile_update(request):
-    """
-    Handle profile update.
-    If the request is POST, process the form data
-    to update user information and profile.
-    Redirect to the profile page on success.
-    For GET requests, render the update forms.
-    """
-    if request.method == 'POST':
-        u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileUpdateForm(
-            request.POST,
-            request.FILES,
-            instance=request.user.profile
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def current_user(request):
+    user = request.user
+    return Response({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email
+    })
+
+
+def dashboard(request):
+    return render(request, 'accounts/dashboard.html')
+
+
+# Profile Views
+class ProfileListView(LoginRequiredMixin, ListView):
+    model = Profile
+    
+    def render_to_response(self, context, **response_kwargs):
+        profiles = Profile.objects.all()
+        serializer = ProfileSerializer(profiles, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+
+#@api_view(['POST'])
+#@csrf_exempt
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([IsAuthenticated])  # Bu sayede request.user dolu olur
+#@method_decorator(csrf_exempt, name='dispatch')
+def profile_create(request):
+    if Profile.objects.filter(user=request.user).exists():
+        return Response(
+            {'error': 'Bu kullanıcıya ait zaten bir profil mevcut.'},
+            status=400
         )
-        if u_form.is_valid() and p_form.is_valid():
-            u_form.save()
-            p_form.save()
-            return redirect('user-profile')
-    else:
-        u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileUpdateForm(instance=request.user.profile)
 
-    return render(
-        request,
-        'accounts/profile_update.html',
-        {'u_form': u_form, 'p_form': p_form}
-    )
+    serializer = ProfileSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user)  # user elle atanıyor
+        return Response({'message': 'Profil başarıyla oluşturuldu'}, status=201)
+    return Response(serializer.errors, status=400)
 
 
-class ProfileListView(LoginRequiredMixin, ExportMixin, SingleTableView):
-    """
-    Display a list of profiles in a table format.
-    Requires user to be logged in
-    and supports exporting the table data.
-    Pagination is applied with 10 profiles per page.
-    """
-    model = Profile
-    template_name = 'accounts/stafflist.html'
-    context_object_name = 'profiles'
-    table_class = ProfileTable
-    paginate_by = 10
-    table_pagination = False
+class ProfileDeleteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
-
-class ProfileCreateView(LoginRequiredMixin, CreateView):
-    """
-    Create a new profile.
-    Requires user to be logged in and have superuser status.
-    Redirects to the profile list upon successful creation.
-    """
-    model = Profile
-    template_name = 'accounts/staffcreate.html'
-    fields = ['user', 'role', 'status']
-
-    def get_success_url(self):
-        """
-        Return the URL to redirect to after successfully creating a profile.
-        """
-        return reverse('profile_list')
-
-    def test_func(self):
-        """
-        Check if the user is a superuser.
-        """
-        return self.request.user.is_superuser
-
-
-class ProfileUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    """
-    Update an existing profile.
-    Requires user to be logged in and have superuser status.
-    Redirects to the profile list upon successful update.
-    """
-    model = Profile
-    template_name = 'accounts/staffupdate.html'
-    fields = ['user', 'role', 'status']
-
-    def get_success_url(self):
-        """
-        Return the URL to redirect to after successfully updating a profile.
-        """
-        return reverse('profile_list')
-
-    def test_func(self):
-        """
-        Check if the user is a superuser.
-        """
-        return self.request.user.is_superuser
-
-
-class ProfileDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    """
-    Delete an existing profile.
-    Requires user to be logged in and have superuser status.
-    Redirects to the profile list upon successful deletion.
-    """
-    model = Profile
-    template_name = 'accounts/staffdelete.html'
-
-    def get_success_url(self):
-        """
-        Return the URL to redirect to after successfully deleting a profile.
-        """
-        return reverse('profile_list')
-
-    def test_func(self):
-        """
-        Check if the user is a superuser.
-        """
-        return self.request.user.is_superuser
-
-
+    def delete(self, request, pk, *args, **kwargs):
+        profile = get_object_or_404(Profile, id=pk)
+        if profile.user != request.user:
+            return Response(
+                {"error": "You do not have permission to delete this profile."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        profile.delete()
+        return Response({"message": "Profile deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+# Customer Views
 class CustomerListView(LoginRequiredMixin, ListView):
-    """
-    View for listing all customers.
-
-    Requires the user to be logged in. Displays a list of all Customer objects.
-    """
     model = Customer
-    template_name = 'accounts/customer_list.html'
-    context_object_name = 'customers'
+    
+    def render_to_response(self, context, **response_kwargs):
+        customers = Customer.objects.all()
+        serializer = CustomerSerializer(customers, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
 
-class CustomerCreateView(LoginRequiredMixin, CreateView):
-    """
-    View for creating a new customer.
+@csrf_exempt
+def CustomerCreateView(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            form = CustomerForm(data)
+            if form.is_valid():
+                customer = form.save()
+                return JsonResponse({'message': 'Customer created successfully'}, status=201)
+            return JsonResponse({'errors': form.errors}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    return JsonResponse({'error': 'Only POST method allowed'}, status=405)
 
-    Requires the user to be logged in.
-    Provides a form for creating a new Customer object.
-    On successful form submission, redirects to the customer list.
-    """
-    model = Customer
-    template_name = 'accounts/customer_form.html'
-    form_class = CustomerForm
-    success_url = reverse_lazy('customer_list')
+class CustomerUpdateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def put(self, request, pk):
+        try:
+            customer = Customer.objects.get(pk=pk)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
 
-class CustomerUpdateView(LoginRequiredMixin, UpdateView):
-    """
-    View for updating an existing customer.
-
-    Requires the user to be logged in.
-    Provides a form for editing an existing Customer object.
-    On successful form submission, redirects to the customer list.
-    """
-    model = Customer
-    template_name = 'accounts/customer_form.html'
-    form_class = CustomerForm
-    success_url = reverse_lazy('customer_list')
-
-
-class CustomerDeleteView(LoginRequiredMixin, DeleteView):
-    """
-    View for deleting a customer.
-
-    Requires the user to be logged in.
-    Displays a confirmation page for deleting an existing Customer object.
-    On confirmation, deletes the object and redirects to the customer list.
-    """
-    model = Customer
-    template_name = 'accounts/customer_confirm_delete.html'
-    success_url = reverse_lazy('customer_list')
+        serializer = CustomerSerializer(customer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def is_ajax(request):
-    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+class CustomerDeleteAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        customer = get_object_or_404(Customer, pk=pk)
+        customer.delete()
+        return Response({'message': 'Müşteri silindi.'}, status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def vendor_list(request):
+    vendors = Vendor.objects.all()
+    serializer = VendorSerializer(vendors, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def vendor_create(request):
+    serializer = VendorSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=201)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def vendor_update(request, pk):
+    try:
+        vendor = Vendor.objects.get(pk=pk)
+    except Vendor.DoesNotExist:
+        return Response({'error': 'Vendor not found'}, status=404)
+
+    serializer = VendorSerializer(vendor, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def vendor_delete(request, pk):
+    try:
+        vendor = Vendor.objects.get(pk=pk)
+    except Vendor.DoesNotExist:
+        return Response({'error': 'Vendor not found'}, status=404)
+
+    vendor.delete()
+    return Response({'message': 'Vendor deleted successfully'}, status=204)
+
+
+# Search customers (for select2 or autocomplete functionality)
 @csrf_exempt
 @require_POST
 @login_required
 def get_customers(request):
-    if is_ajax(request) and request.method == 'POST':
-        term = request.POST.get('term', '')
-        customers = Customer.objects.filter(
-            name__icontains=term
-        ).values('id', 'name')
-        customer_list = list(customers)
-        return JsonResponse(customer_list, safe=False)
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
+    try:
+        data = json.loads(request.body)
+        term = data.get('term', '')
+        customers = Customer.objects.filter(name__icontains=term)
+        serializer = CustomerSerializer(customers, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-
-class VendorListView(LoginRequiredMixin, ListView):
-    model = Vendor
-    template_name = 'accounts/vendor_list.html'
-    context_object_name = 'vendors'
-    paginate_by = 10
-
-
-class VendorCreateView(LoginRequiredMixin, CreateView):
-    model = Vendor
-    form_class = VendorForm
-    template_name = 'accounts/vendor_form.html'
-    success_url = reverse_lazy('vendor-list')
-
-
-class VendorUpdateView(LoginRequiredMixin, UpdateView):
-    model = Vendor
-    form_class = VendorForm
-    template_name = 'accounts/vendor_form.html'
-    success_url = reverse_lazy('vendor-list')
-
-
-class VendorDeleteView(LoginRequiredMixin, DeleteView):
-    model = Vendor
-    template_name = 'accounts/vendor_confirm_delete.html'
-    success_url = reverse_lazy('vendor-list')
+class ProfileUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    def put(self, request, *args, **kwargs):
+        profile = get_object_or_404(Profile, user=request.user)
+        serializer = ProfileSerializer(profile, data=request.data, partial=True, context={"request": request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Profile updated successfully"})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

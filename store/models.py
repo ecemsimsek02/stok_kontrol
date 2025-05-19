@@ -45,9 +45,9 @@ class Item(models.Model):
     description = models.TextField(max_length=256)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=0)
-    price = models.FloatField(default=0)
-    expiring_date = models.DateTimeField(null=True, blank=True)
-    vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True)
+    #price = models.FloatField(default=0)
+    #expiring_date = models.DateTimeField(null=True, blank=True)
+    #vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         """
@@ -58,12 +58,12 @@ class Item(models.Model):
             f"Quantity: {self.quantity}"
         )
 
-    def get_absolute_url(self):
-        """
+    """def get_absolute_url(self):
+    
         Returns the absolute URL for an item detail view.
-        """
+       
         return reverse('item-detail', kwargs={'slug': self.slug})
-
+"""
     def to_json(self):
         product = model_to_dict(self)
         product['id'] = self.id
@@ -82,11 +82,9 @@ class Delivery(models.Model):
     """
     Represents a delivery of an item to a customer.
     """
-    item = models.ForeignKey(
-        Item, blank=True, null=True, on_delete=models.SET_NULL
-    )
+    item = models.CharField(max_length=30, blank=True, null=True)
     customer_name = models.CharField(max_length=30, blank=True, null=True)
-    phone_number = PhoneNumberField(blank=True, null=True)
+    phone_number = models.CharField(max_length=30, blank=True, null=True)
     location = models.CharField(max_length=20, blank=True, null=True)
     date = models.DateTimeField()
     is_delivered = models.BooleanField(

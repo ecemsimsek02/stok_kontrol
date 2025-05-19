@@ -14,31 +14,13 @@ class BootstrapMixin(forms.ModelForm):
 
 class PurchaseForm(BootstrapMixin, forms.ModelForm):
     """
-    A form for creating and updating Purchase instances.
+    A form for updating only the delivery status of a Purchase.
     """
     class Meta:
         model = Purchase
-        fields = [
-            'item',  'price', 'description', 'vendor',
-            'quantity', 'delivery_date', 'delivery_status'
-        ]
+        fields = ['delivery_status']
         widgets = {
-            'delivery_date': forms.DateInput(
-                attrs={
-                    'class': 'form-control',
-                    'type': 'datetime-local'
-                }
-            ),
-            'description': forms.Textarea(
-                attrs={'rows': 1, 'cols': 40}
-            ),
-            'quantity': forms.NumberInput(
-                attrs={'class': 'form-control'}
-            ),
             'delivery_status': forms.Select(
-                attrs={'class': 'form-control'}
-            ),
-            'price': forms.NumberInput(
                 attrs={'class': 'form-control'}
             ),
         }

@@ -19,10 +19,11 @@ from django_tables2.export.views import ExportMixin
 from .models import Bill
 from .tables import BillTable
 from accounts.models import Profile
-
-
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+"""
 class BillListView(LoginRequiredMixin, ExportMixin, SingleTableView):
-    """View for listing bills."""
+    
     model = Bill
     table_class = BillTable
     template_name = 'bills/bill_list.html'
@@ -32,7 +33,7 @@ class BillListView(LoginRequiredMixin, ExportMixin, SingleTableView):
 
 
 class BillCreateView(LoginRequiredMixin, CreateView):
-    """View for creating a new bill."""
+   
     model = Bill
     template_name = 'bills/billcreate.html'
     fields = [
@@ -47,12 +48,12 @@ class BillCreateView(LoginRequiredMixin, CreateView):
     ]
 
     def get_success_url(self):
-        """Redirect to the list of bills after a successful update."""
+      
         return reverse('bill_list')
 
 
 class BillUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    """View for updating an existing bill."""
+   
     model = Bill
     template_name = 'bills/billupdate.html'
     fields = [
@@ -67,23 +68,39 @@ class BillUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     ]
 
     def test_func(self):
-        """Check if the user has the required permissions."""
+        
         return self.request.user.profile in Profile.objects.all()
 
     def get_success_url(self):
-        """Redirect to the list of bills after a successful update."""
+     
         return reverse('bill_list')
 
 
 class BillDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    """View for deleting a bill."""
+   
     model = Bill
     template_name = 'bills/billdelete.html'
 
     def test_func(self):
-        """Check if the user is a superuser."""
+        
         return self.request.user.is_superuser
 
     def get_success_url(self):
-        """Redirect to the list of bills after successful deletion."""
+       
         return reverse('bill_list')
+"""
+from rest_framework import generics, permissions
+from .models import Bill
+from .serializers import BillSerializer
+
+class BillListCreateView(generics.ListCreateAPIView):
+    """API view to retrieve list of bills or create new"""
+    queryset = Bill.objects.all()
+    serializer_class = BillSerializer
+    permission_classes = [IsAuthenticated]
+
+class BillRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    """API view to retrieve, update, or delete bill"""
+    queryset = Bill.objects.all()
+    serializer_class = BillSerializer
+    permission_classes = [IsAuthenticated]

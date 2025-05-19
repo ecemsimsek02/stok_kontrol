@@ -1,10 +1,10 @@
 from django.db import models
 from autoslug import AutoSlugField
-
+#from transactions.models import Purchase
 
 class Bill(models.Model):
     """Model representing a bill with various details and payment status."""
-
+   
     slug = AutoSlugField(unique=True, populate_from='date')
     date = models.DateTimeField(
         auto_now_add=True,
@@ -19,11 +19,6 @@ class Bill(models.Model):
         blank=True,
         null=True,
         help_text='Phone number of the institution'
-    )
-    email = models.EmailField(
-        blank=True,
-        null=True,
-        help_text='Email address of the institution'
     )
     address = models.CharField(
         max_length=255,

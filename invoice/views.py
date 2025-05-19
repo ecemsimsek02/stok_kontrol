@@ -17,91 +17,73 @@ from django_tables2.export.views import ExportMixin
 from .models import Invoice
 from .tables import InvoiceTable
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .serializers import InvoiceSerializer
+from django.shortcuts import get_object_or_404
 
-class InvoiceListView(LoginRequiredMixin, ExportMixin, SingleTableView):
+class InvoiceListView(APIView):
     """
-    View for listing invoices with table export functionality.
+    API view for listing invoices.
     """
-    model = Invoice
-    table_class = InvoiceTable
-    template_name = 'invoice/invoicelist.html'
-    context_object_name = 'invoices'
-    paginate_by = 10
-    table_pagination = False  # Disable table pagination
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access
+
+    def get(self, request):
+        invoices = Invoice.objects.all()
+        serializer = InvoiceSerializer(invoices, many=True)
+        return Response(serializer.data)
 
 
-class InvoiceDetailView(DetailView):
+class InvoiceDetailView(APIView):
     """
-    View for displaying invoice details.
+    API view for retrieving the details of an invoice.
     """
-    model = Invoice
-    template_name = 'invoice/invoicedetail.html'
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access
 
-    def get_success_url(self):
-        """
-        Return the URL to redirect to after a successful action.
-        """
-        return reverse('invoice-detail', kwargs={'slug': self.object.pk})
+    def get(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        serializer = InvoiceSerializer(invoice)
+        return Response(serializer.data)
 
 
-class InvoiceCreateView(LoginRequiredMixin, CreateView):
+class InvoiceCreateView(APIView):
     """
-    View for creating a new invoice.
+    API view for creating a new invoice.
     """
-    model = Invoice
-    template_name = 'invoice/invoicecreate.html'
-    fields = [
-        'customer_name', 'contact_number', 'item',
-        'price_per_item', 'quantity', 'shipping'
-    ]
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access
 
-    def get_success_url(self):
-        """
-        Return the URL to redirect to after a successful creation.
-        """
-        return reverse('invoicelist')
+    def post(self, request):
+        serializer = InvoiceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class InvoiceUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class InvoiceUpdateView(APIView):
     """
-    View for updating an existing invoice.
+    API view for updating an existing invoice.
     """
-    model = Invoice
-    template_name = 'invoice/invoiceupdate.html'
-    fields = [
-        'customer_name', 'contact_number', 'item',
-        'price_per_item', 'quantity', 'shipping'
-    ]
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access
 
-    def get_success_url(self):
-        """
-        Return the URL to redirect to after a successful update.
-        """
-        return reverse('invoicelist')
-
-    def test_func(self):
-        """
-        Determine if the user has permission to update the invoice.
-        """
-        return self.request.user.is_superuser
+    def put(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        serializer = InvoiceSerializer(invoice, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class InvoiceDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class InvoiceDeleteView(APIView):
     """
-    View for deleting an invoice.
+    API view for deleting an invoice.
     """
-    model = Invoice
-    template_name = 'invoice/invoicedelete.html'
-    success_url = '/products'  # Can be overridden in get_success_url()
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access
 
-    def get_success_url(self):
-        """
-        Return the URL to redirect to after a successful deletion.
-        """
-        return reverse('invoicelist')
-
-    def test_func(self):
-        """
-        Determine if the user has permission to delete the invoice.
-        """
-        return self.request.user.is_superuser
+    def delete(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        invoice.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

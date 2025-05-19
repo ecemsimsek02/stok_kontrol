@@ -13,9 +13,7 @@ class ItemForm(forms.ModelForm):
             'description',
             'category',
             'quantity',
-            'price',
-            'expiring_date',
-            'vendor'
+            
         ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),

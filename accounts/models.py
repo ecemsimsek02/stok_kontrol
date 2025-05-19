@@ -40,8 +40,8 @@ class Profile(models.Model):
         processors=[ResizeToFill(150, 150)],
         options={'quality': 100}
     )
-    telephone = PhoneNumberField(
-        null=True, blank=True, verbose_name='Telephone'
+    telephone = models.CharField(
+        max_length=30, blank=True, verbose_name='First Name'
     )
     email = models.EmailField(
         max_length=150, blank=True, null=True, verbose_name='Email'
@@ -100,8 +100,8 @@ class Vendor(models.Model):
         populate_from='name',
         verbose_name='Slug'
     )
-    phone_number = models.BigIntegerField(
-        blank=True, null=True, verbose_name='Phone Number'
+    phone_number = models.CharField(
+        max_length=50, blank=True, null=True, verbose_name='Address'
     )
     address = models.CharField(
         max_length=50, blank=True, null=True, verbose_name='Address'

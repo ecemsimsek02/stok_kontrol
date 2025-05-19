@@ -1,9 +1,4 @@
-# Django core imports
 from django.urls import path
-from django.conf import settings
-from django.conf.urls.static import static
-
-# Local app imports
 from .views import (
     InvoiceListView,
     InvoiceDetailView,
@@ -12,39 +7,22 @@ from .views import (
     InvoiceDeleteView
 )
 
-# URL patterns
 urlpatterns = [
-    # Invoice URLs
-    path(
-        'invoices/',
-        InvoiceListView.as_view(),
-        name='invoicelist'
-    ),
-    path(
-        'invoice/<slug:slug>/',
-        InvoiceDetailView.as_view(),
-        name='invoice-detail'
-    ),
-    path(
-        'new-invoice/',
-        InvoiceCreateView.as_view(),
-        name='invoice-create'
-    ),
-    path(
-        'invoice/<slug:slug>/update/',
-        InvoiceUpdateView.as_view(),
-        name='invoice-update'
-    ),
-    path(
-        'invoice/<int:pk>/delete/',
-        InvoiceDeleteView.as_view(),
-        name='invoice-delete'
-    ),
+    path('invoices-list/', InvoiceListView.as_view(), name='invoice_list'),
+    path('invoices-detail/<int:pk>/', InvoiceDetailView.as_view(), name='invoice_detail'),
+    path('create/', InvoiceCreateView.as_view(), name='invoice_create'),
+    path('update/<int:pk>/', InvoiceUpdateView.as_view(), name='invoice_update'),
+    path('delete/<int:pk>/', InvoiceDeleteView.as_view(), name='invoice_delete'),
 ]
 
-# Static media files configuration for development
-if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT
-    )
+from rest_framework.routers import DefaultRouter
+from .api_views import InvoiceViewSet 
+from django.urls import path, include
+
+router = DefaultRouter()
+router.register(r'invoices', InvoiceViewSet)
+
+
+urlpatterns = [
+    path('api/', include(router.urls)),
+]
