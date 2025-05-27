@@ -4,13 +4,13 @@ from .models import Disinfectant, Material, DisinfectantRecipe
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
-        fields = ['id', 'name', 'quantity_in_stock', 'unit']
+        fields = ['id', 'name', 'quantity_in_stock', 'unit','min_stock_level',]
 
 
 class DisinfectantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Disinfectant
-        fields = ['id', 'name', 'quantity_in_stock']
+        fields = ['id', 'name', 'quantity_in_stock','min_stock_level',]
 
 
 class DisinfectantRecipeSerializer(serializers.ModelSerializer):

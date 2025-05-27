@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice PDF</title>
+    <style>
+        body { font-family: sans-serif; }
+        .invoice { border: 1px solid #ccc; padding: 20px; }
+        .title { font-size: 24px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="invoice">
+        <div class="title">Invoice #{{ invoice.id }}</div>
+        <p>Customer: {{ invoice.customer_name }}</p>
+        <p>Contact: {{ invoice.contact_number }}</p>
+        <p>Item: {{ invoice.item }}</p>
+        <p>Quantity: {{ invoice.quantity }}</p>
+        <p>Price per Item: {{ invoice.price_per_item }}</p>
+        <p>Shipping: {{ invoice.shipping }}</p>
+        <p>Total: {{ invoice.total }}</p>
+        <p>Grand Total: {{ invoice.grand_total }}</p>
+    </div>
+</body>
+</html>

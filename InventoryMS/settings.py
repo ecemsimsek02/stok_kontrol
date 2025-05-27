@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'invoice.apps.InvoiceConfig',
     'bills.apps.BillsConfig',
     'stocks.apps.StocksConfig',
-    'cash.apps.CashConfig'
+    'cash.apps.CashConfig',
+    'tasks.apps.TasksConfig',
 ]
 
 MIDDLEWARE = [
@@ -113,6 +114,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+    'NAME': 'accounts.validators.CustomPasswordValidator',
+},
+
 ]
 
 
@@ -185,7 +190,7 @@ REST_FRAMEWORK = {
 }
 
 
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000','http://192.168.1.33:8000']  # API'yi kullanacak domain
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000','http://192.168.1.156:8000','http://192.168.1.255:8000']  # API'yi kullanacak domain
 CSRF_COOKIE_HTTPONLY = False  # Bu frontend'in JS tarafında CSRF cookie'sine erişebilmesi için
 """
 CSRF_TRUSTED_ORIGINS = [

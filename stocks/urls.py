@@ -6,6 +6,7 @@ from .views import (
     DisinfectantRecipeListCreateView,
     DisinfectantRecipeUpdateView,
     DisinfectantRecipeDeleteView,
+    StockAlertView,
 )
 
 
@@ -27,4 +28,5 @@ urlpatterns = [
     path('api/materials/', MaterialView.as_view(), name='material_create_or_update'),
     path('api/recipes/<int:pk>/update/', DisinfectantRecipeUpdateView.as_view(), name='recipe_update'),
     path('api/recipes/<int:pk>/delete/', DisinfectantRecipeDeleteView.as_view(), name='recipe_delete'),
+    path('api/stock-alerts/', StockAlertView.as_view(), name="stock-alerts"),
 ]

@@ -32,6 +32,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
     permission_classes = [IsAuthenticated, IsAdminUserRole]
 
+    def get_serializer_context(self):
+        return {"request": self.request}
+
     def list(self, request, *args, **kwargs):
         print("User:", request.user)
         print("Authenticated:", request.user.is_authenticated)

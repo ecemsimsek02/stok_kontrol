@@ -6,8 +6,9 @@ from rest_framework import generics
 from .models import Material, Disinfectant, DisinfectantRecipe
 from .serializers import MaterialSerializer, DisinfectantSerializer, DisinfectantRecipeSerializer
 from rest_framework.views import APIView
-
-
+from rest_framework.permissions import IsAuthenticated
+from django.db import models
+from django.db.models import F
 class DisinfectantProductionView(views.APIView):
     """View for producing disinfectants and updating the stock."""
     
@@ -73,3 +74,19 @@ class MaterialView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class StockAlertView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        material_alerts = Material.objects.filter(quantity_in_stock__lt=F('min_stock_level'))
+        disinfectant_alerts = Disinfectant.objects.filter(quantity_in_stock__lt=F('min_stock_level'))
+
+        alerts = []
+
+        for m in material_alerts:
+            alerts.append(f"Malzeme '{m.name}' minimum stok seviyesinin altında.")
+
+        for d in disinfectant_alerts:
+            alerts.append(f"Dezenfektan '{d.name}' minimum stok seviyesinin altında.")
+
+        return Response({"alerts": alerts})

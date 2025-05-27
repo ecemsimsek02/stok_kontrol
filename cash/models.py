@@ -36,15 +36,15 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     transaction_type = models.CharField(choices=TRANSACTION_CHOICES, max_length=3)
     description = models.CharField(max_length=255)
+    company_name = models.CharField(max_length=255, blank=True, null=True)
+    customer_name = models.CharField(max_length=255, blank=True, null=True)
+    added_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.transaction_type} - {self.amount} TL on {self.created_at}"
 
     def update_balance(self):
-        """
-        Update the cash register balance after each transaction.
-        """
         if self.transaction_type == self.CASH_IN:
             self.cash_register.balance += self.amount
         else:

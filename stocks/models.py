@@ -5,7 +5,7 @@ class Material(models.Model):
     name = models.CharField(max_length=100)
     quantity_in_stock = models.FloatField(default=0.0)  # Quantity in stock (liters, grams, etc.)
     unit = models.CharField(max_length=50)  # e.g. 'grams', 'liters'
-
+    min_stock_level = models.FloatField(default=0) 
     def __str__(self):
         return self.name
 
@@ -29,7 +29,7 @@ class Disinfectant(models.Model):
     """Model for disinfectants."""
     name = models.CharField(max_length=100)
     quantity_in_stock = models.FloatField(default=0.0)  # Disinfectant stock in liters or other units
-
+    min_stock_level = models.FloatField(default=0) 
     def __str__(self):
         return self.name
 
