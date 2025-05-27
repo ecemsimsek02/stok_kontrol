@@ -44,4 +44,4 @@ Bu proje, dezenfektan ve malzeme stoklarını yönetmek, faturaları, müşteril
 ![Login Görseli](./screenshots/login.png)
 
 ### Dashboard
-![Dashboard Görseli](./screenshots/dashboard.png)
+![Dashboard Görseli](./screenshots/dasboard.png)
