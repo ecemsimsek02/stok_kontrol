@@ -108,17 +108,18 @@ DATABASES = {
     }
 }
 """
+RAILWAY_ENV = os.getenv("RAILWAY_ENV", False)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE'),
-        'USER': os.getenv('PGUSER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('PGHOST'),  # NOT: 'RAILWAY_PRIVATE_DOMAIN' değilse, Railway'de genelde 'PGHOST' olur
-        'PORT': os.getenv('PGPORT', '5432'),
+        'NAME': os.getenv('PGDATABASE', 'railway'),
+        'USER': os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('PGHOST', 'turntable.proxy.rlwy.net' if not RAILWAY_ENV else 'postgres.railway.internal'),
+        'PORT': os.getenv('PGPORT', '40797' if not RAILWAY_ENV else '5432'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
