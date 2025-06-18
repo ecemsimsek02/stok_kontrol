@@ -7,7 +7,10 @@ django-filter==24.3
 django-imagekit==5.0.0
 django-phonenumber-field==8.0.0
 django-tables2==2.7.0
-
+djangorestframework
+gunicorn
+dj-database-url
+psycopg2-binary
 # Bootstrap Packages
 crispy-bootstrap5==2024.2
 
