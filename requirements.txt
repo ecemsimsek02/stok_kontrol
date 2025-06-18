@@ -10,7 +10,7 @@ django-tables2==2.7.0
 djangorestframework
 gunicorn
 django-axes
-weasyprint
+xhtml2pdf
 
 django-cors-headers
 dj-database-url
