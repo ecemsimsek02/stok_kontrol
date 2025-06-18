@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
+from accounts.models import Customer, Vendor
 class CashRegister(models.Model):
     """
     Model for tracking the cash register balance.
@@ -36,8 +36,8 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     transaction_type = models.CharField(choices=TRANSACTION_CHOICES, max_length=3)
     description = models.CharField(max_length=255)
-    company_name = models.CharField(max_length=255, blank=True, null=True)
-    customer_name = models.CharField(max_length=255, blank=True, null=True)
+    customer = models.ForeignKey(Customer, null=True, blank=True, on_delete=models.SET_NULL)
+    company = models.ForeignKey(Vendor, null=True, blank=True, on_delete=models.SET_NULL)
     added_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

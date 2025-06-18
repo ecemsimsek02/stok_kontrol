@@ -20,9 +20,10 @@ class Sale(models.Model):
         default="P",
         verbose_name="Delivery Status"
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Sale for Invoice {self.invoice.slug}"
+        return f"Sale - Invoice #{self.invoice.id}"
 
 
 class Purchase(models.Model):

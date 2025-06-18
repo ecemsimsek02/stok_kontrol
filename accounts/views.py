@@ -34,7 +34,17 @@ from django.utils.decorators import method_decorator
 from django.shortcuts import render
 from rest_framework.permissions import AllowAny
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+import logging
+from django.db.models import Q
+import sqlite3
+from django.db import connection
+logger = logging.getLogger('custom')
 
+from axes.models import AccessAttempt
+from django.contrib.auth import authenticate
 # Register View
 @csrf_exempt
 @api_view(['POST'])
@@ -49,6 +59,29 @@ def register(request):
             return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username', '')
+        ip_address = request.META.get('REMOTE_ADDR')
+
+        # AccessAttempt tablosunda bu kullanıcı ve IP için başarısız giriş sayısı
+        failed_attempts = AccessAttempt.objects.filter(
+            username=username,
+            ip_address=ip_address,
+            failures_since_start__gte=3,  # sınır neyse
+            is_login_failure=True,
+        )
+
+        if failed_attempts.exists():
+            return Response(
+                {"detail": "Çok sayıda başarısız giriş denemesi nedeniyle hesabınız geçici olarak kilitlendi."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Normal authentication süreci
+        response = super().post(request, *args, **kwargs)
+        return response
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -108,13 +141,6 @@ class ProfileDeleteAPIView(APIView):
         profile.delete()
         return Response({"message": "Profile deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 # Customer Views
-class CustomerListView(LoginRequiredMixin, ListView):
-    model = Customer
-    
-    def render_to_response(self, context, **response_kwargs):
-        customers = Customer.objects.all()
-        serializer = CustomerSerializer(customers, many=True)
-        return JsonResponse(serializer.data, safe=False)
 
 
 @csrf_exempt
@@ -125,6 +151,7 @@ def CustomerCreateView(request):
             form = CustomerForm(data)
             if form.is_valid():
                 customer = form.save()
+                logger.info(f"{request.user.username} tarafından {customer.id} numaralı müşteri eklendi.")
                 return JsonResponse({'message': 'Customer created successfully'}, status=201)
             return JsonResponse({'errors': form.errors}, status=400)
         except json.JSONDecodeError:
@@ -154,7 +181,7 @@ class CustomerDeleteAPIView(APIView):
     def delete(self, request, pk):
         customer = get_object_or_404(Customer, pk=pk)
         customer.delete()
-        return Response({'message': 'Müşteri silindi.'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'Müşteri silindi.'}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -199,7 +226,7 @@ def vendor_delete(request, pk):
         return Response({'error': 'Vendor not found'}, status=404)
 
     vendor.delete()
-    return Response({'message': 'Vendor deleted successfully'}, status=204)
+    return Response({'message': 'Satıcı silindi.'}, status=status.HTTP_200_OK)
 
 
 # Search customers (for select2 or autocomplete functionality)
@@ -226,3 +253,39 @@ class ProfileUpdateView(APIView):
             serializer.save()
             return Response({"message": "Profile updated successfully"})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CustomerListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        search = request.GET.get('search', '').strip()
+        if search:
+            customers = Customer.objects.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(email__icontains=search) |
+                Q(phone__icontains=search)
+            )
+        else:
+            customers = Customer.objects.all()
+
+        serializer = CustomerSerializer(customers, many=True)
+        return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def vendor_list_vulnerable(request):
+    search = request.GET.get("search", "")
+    
+    # SQL Injection'a açık sorgu
+    raw_query = f"SELECT * FROM accounts_vendor WHERE name LIKE '%{search}%'"
+    
+    with connection.cursor() as cursor:
+        cursor.execute(raw_query)
+        columns = [col[0] for col in cursor.description]
+        results = [
+            dict(zip(columns, row))
+            for row in cursor.fetchall()
+        ]
+    return Response(results)

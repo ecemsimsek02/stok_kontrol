@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'axes',
 
     'phonenumber_field',
     'crispy_forms',
@@ -57,15 +58,26 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
     
 ]
+AXES_FAILURE_LIMIT = 3
+
+# IP bazlı engelleme (varsayılan True)
+
+
+# Engelleme süresi (saniye cinsinden) - örn. 15 dakika
+AXES_COOLOFF_TIME = 1/96  # 15 dakika = 1/96 gün
+
+# Bloklu denemelerde mesaj gösterilsin
+AXES_LOCKOUT_TEMPLATE = 'registration/account_locked.html'
 
 ROOT_URLCONF = 'InventoryMS.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -188,9 +200,12 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
     ]
 }
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',  # bu da kalmalı
+]
 
-
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000','http://192.168.1.156:8000','http://192.168.1.255:8000']  # API'yi kullanacak domain
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000','http://192.168.1.156:8000','http://localhost:3000','http://192.168.1.33:8000']  # API'yi kullanacak domain
 CSRF_COOKIE_HTTPONLY = False  # Bu frontend'in JS tarafında CSRF cookie'sine erişebilmesi için
 """
 CSRF_TRUSTED_ORIGINS = [
@@ -200,3 +215,43 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Frontend'in çalıştığı port
 ]"""
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+# Geliştirme ortamı için güvenliğe takılmasın:
+
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'detailed': {
+            'format': '[{asctime}] {levelname} - {name} - {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'activity.log'),
+            'formatter': 'detailed',
+        },
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'custom': {  # senin kendi logların için
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

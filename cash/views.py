@@ -35,12 +35,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def get_serializer_context(self):
         return {"request": self.request}
 
-    def list(self, request, *args, **kwargs):
-        print("User:", request.user)
-        print("Authenticated:", request.user.is_authenticated)
-        print("Staff:", request.user.is_staff)
-        print("Superuser:", request.user.is_superuser)
-        return super().list(request, *args, **kwargs)
+    
     
 
     

@@ -5,6 +5,8 @@ from django.template.loader import get_template
 from weasyprint import HTML
 # Authentication and permissions
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+import logging
+logger = logging.getLogger('custom') 
 
 # Class-based views
 from django.views.generic import (
@@ -72,6 +74,7 @@ class InvoiceCreateView(APIView):
         serializer = InvoiceSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            logger.info(f"{request.user.username} tarafından {invoice.id} numaralı fatura eklendi.")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -99,5 +102,7 @@ class InvoiceDeleteView(APIView):
 
     def delete(self, request, pk):
         invoice = get_object_or_404(Invoice, pk=pk)
+        print("log satırına geldik")
+        logger.info(f"{request.user.username} tarafından {invoice.id} numaralı fatura silindi.")
         invoice.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

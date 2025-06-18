@@ -11,17 +11,38 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug']
 
 class ItemSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Item model.
-    """
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+    newCategoryName = serializers.CharField(write_only=True, required=False)
+    category_name = serializers.CharField(source='category.name', read_only=True)
     
     class Meta:
         model = Item
-        fields = [
-            'id', 'slug', 'name', 'description', 'category', 'quantity', 'to_json'
-        ]
+        fields = ['id', 'slug', 'name', 'description', 'category', 'category_name',
+                  'newCategoryName', 'quantity']
 
+    def validate(self, data):
+        newCategoryName = data.get('newCategoryName')
+        category = data.get('category')
+
+        if newCategoryName:
+            if category:
+                raise serializers.ValidationError("Hem 'category' hem 'newCategoryName' girilemez.")
+        elif not category:
+            raise serializers.ValidationError("'category' ya da 'newCategoryName' zorunlu.")
+        return data
+
+    def create(self, validated_data):
+        newCategoryName = validated_data.pop('newCategoryName', None)
+        if newCategoryName:
+            category, created = Category.objects.get_or_create(name=newCategoryName)
+            validated_data['category'] = category
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        newCategoryName = validated_data.pop('newCategoryName', None)
+        if newCategoryName:
+            category, created = Category.objects.get_or_create(name=newCategoryName)
+            validated_data['category'] = category
+        return super().update(instance, validated_data)
 class DeliverySerializer(serializers.ModelSerializer):
     """
     Serializer for Delivery model.

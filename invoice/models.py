@@ -5,7 +5,6 @@ from store.models import Item
 
 
 class Invoice(models.Model):
-  
 
     slug = AutoSlugField(unique=True, populate_from='date')
     date = models.DateTimeField(

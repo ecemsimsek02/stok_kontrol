@@ -11,7 +11,7 @@ from .views import (
     profile_create,
     ProfileListView,
     ProfileUpdateView,
-    CustomerListView,
+    CustomerListAPIView,
     CustomerCreateView,
     CustomerUpdateAPIView,
     CustomerDeleteAPIView,
@@ -22,8 +22,10 @@ from .views import (
     vendor_create,
     vendor_delete,
     vendor_update,
+    vendor_list_vulnerable,
     dashboard,
-    current_user
+    current_user,
+    CustomAuthToken
 )
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -31,6 +33,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 urlpatterns = [
     # User authentication URLs
     path('register/', user_views.register, name='user-register'),
+    path('api-token-auth/', CustomAuthToken.as_view()),
     path('login/', auth_views.LoginView.as_view(
         template_name='accounts/login.html'), name='user-login'),
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -47,17 +50,19 @@ urlpatterns = [
     path('profiles/<int:pk>/delete/', ProfileDeleteAPIView.as_view(), name='api-profile-delete'),
 
     # Customer URLs
-    path('customers/', CustomerListView.as_view(), name='customer_list'),
+   
     path('customers/create/', user_views.CustomerCreateView,
          name='customer_create'),
     path('customers/<int:pk>/update/', CustomerUpdateAPIView.as_view(), name='customer-update'),
     path('customers/<int:pk>/delete/', CustomerDeleteAPIView.as_view(), name='customer-delete'),
     path('get_customers/', get_customers, name='get_customers'),
+    path('customers/', CustomerListAPIView.as_view(), name='customer-list'),
 
     path('vendors/', views.vendor_list, name='vendor-list'),
     path('vendors/new/', views.vendor_create, name='vendor-create'),
     path('vendors/<int:pk>/update/', views.vendor_update, name='vendor-update'),
     path('vendors/<int:pk>/delete/', views.vendor_delete, name='vendor-delete'),
+    path('vendors/vulnerable/', views.vendor_list_vulnerable, name='vendor-vulnerable'),
 ]
 
 from rest_framework.routers import DefaultRouter
