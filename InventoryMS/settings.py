@@ -96,7 +96,7 @@ WSGI_APPLICATION = 'InventoryMS.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -111,14 +111,14 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE', 'railway'),  # environment variable yoksa default 'railway'
-        'USER': os.getenv('PGUSER', 'postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('RAILWAY_PRIVATE_DOMAIN', 'localhost'),
-        'PORT': '5432',
+        'NAME': os.getenv('PGDATABASE'),
+        'USER': os.getenv('PGUSER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('PGHOST'),  # NOT: 'RAILWAY_PRIVATE_DOMAIN' değilse, Railway'de genelde 'PGHOST' olur
+        'PORT': os.getenv('PGPORT', '5432'),
     }
 }
-"""
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
