@@ -11,7 +11,7 @@ djangorestframework
 gunicorn
 django-axes
 xhtml2pdf
-
+python-dotenv
 django-cors-headers
 dj-database-url
 psycopg2-binary
