@@ -1,8 +1,9 @@
 # Django core imports
 from django.urls import reverse
-from django.http import HttpResponse
 from django.template.loader import get_template
-from weasyprint import HTML
+from django.http import HttpResponse
+from xhtml2pdf import pisa
+from io import BytesIO
 # Authentication and permissions
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 import logging
@@ -27,8 +28,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .serializers import InvoiceSerializer
 from django.shortcuts import get_object_or_404
-
-
+from xhtml2pdf import pisa
+"""
 def invoice_detail_pdf(request, pk):
     invoice = Invoice.objects.get(pk=pk)
     template = get_template('invoice_pdf.html')
@@ -39,6 +40,24 @@ def invoice_detail_pdf(request, pk):
 
     HTML(string=html_content).write_pdf(response)
     return response
+"""
+def invoice_detail_pdf(request, pk):
+    invoice = Invoice.objects.get(pk=pk)
+    template = get_template('invoice_pdf.html')
+    html_content = template.render({'invoice': invoice})
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'filename="invoice_{pk}.pdf"'
+
+    # PDF oluşturmak için BytesIO kullanıyoruz
+    result = BytesIO()
+    pdf_status = pisa.CreatePDF(src=html_content, dest=result)
+
+    if not pdf_status.err:
+        response.write(result.getvalue())
+        return response
+    else:
+        return HttpResponse("PDF oluşturulamadı", status=500)
 
 class InvoiceListView(APIView):
     """
