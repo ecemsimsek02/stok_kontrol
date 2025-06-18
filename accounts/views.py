@@ -43,7 +43,7 @@ import sqlite3
 from django.db import connection
 logger = logging.getLogger('custom')
 
-from axes.models import AccessAttempt
+#from axes.models import AccessAttempt
 from django.contrib.auth import authenticate
 # Register View
 @csrf_exempt
@@ -59,7 +59,7 @@ def register(request):
             return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+"""
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username', '')
@@ -82,7 +82,7 @@ class CustomAuthToken(ObtainAuthToken):
         # Normal authentication süreci
         response = super().post(request, *args, **kwargs)
         return response
-
+"""
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
