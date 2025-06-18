@@ -9,7 +9,7 @@ django-phonenumber-field==8.0.0
 django-tables2==2.7.0
 djangorestframework
 gunicorn
-axes
+django-axes
 django-cors-headers
 dj-database-url
 psycopg2-binary
