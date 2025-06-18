@@ -108,16 +108,16 @@ DATABASES = {
     }
 }
 """
-RAILWAY_ENV = os.getenv("RAILWAY_ENV", False)
+RAILWAY_ENV = os.getenv("RAILWAY_ENV", "False").lower() == "true"
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('PGDATABASE', 'railway'),
         'USER': os.getenv('PGUSER', 'postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'FJpCZcfKhpnELHdQalqjOyGjJDhrwFqC'),
-        'HOST': os.getenv('PGHOST', 'turntable.proxy.rlwy.net' if not RAILWAY_ENV else 'postgres.railway.internal'),
-        'PORT': os.getenv('PGPORT', '40797' if not RAILWAY_ENV else '5432'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'yQOVhBRXvDMCrcmTQtdefSLgHGgyEZGq'),
+        'HOST': os.getenv('PGHOST', 'ballast.proxy.rlwy.net' if not RAILWAY_ENV else 'postgres.railway.internal'),
+        'PORT': os.getenv('PGPORT', '53974' if not RAILWAY_ENV else '5432'),
     }
 }
 
@@ -162,9 +162,9 @@ LOGOUT_URL = 'logout'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+"""STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR,'static')
-]
+]"""
 #MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
 #MEDIA_URL = '/images/'
 MEDIA_URL = '/media/'
