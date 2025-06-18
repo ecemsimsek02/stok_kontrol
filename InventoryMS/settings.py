@@ -232,7 +232,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
-
+#x
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
