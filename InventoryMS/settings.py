@@ -108,8 +108,10 @@ DATABASES = {
     }
 }
 """
-RAILWAY_ENV = os.getenv("RAILWAY_ENV", "False").lower() == "true"
+from dotenv import load_dotenv
+load_dotenv()  # .env dosyasını yükler
 
+RAILWAY_ENV = os.getenv("RAILWAY_ENV", False)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
