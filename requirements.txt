@@ -17,7 +17,6 @@ dj-database-url
 psycopg2-binary
 # Bootstrap Packages
 crispy-bootstrap5==2024.2
-
 # Utility Packages
 openpyxl==3.1.5
 phonenumbers==8.13.43

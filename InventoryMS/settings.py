@@ -28,8 +28,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'axes',
     'corsheaders',
-    #'axes',
+    
 
     'phonenumber_field',
     'crispy_forms',
@@ -58,19 +59,19 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'axes.middleware.AxesMiddleware',
+    'axes.middleware.AxesMiddleware',
     
 ]
-#AXES_FAILURE_LIMIT = 3
+AXES_FAILURE_LIMIT = 3
 
 # IP bazlı engelleme (varsayılan True)
 
 
 # Engelleme süresi (saniye cinsinden) - örn. 15 dakika
-#AXES_COOLOFF_TIME = 1/96  # 15 dakika = 1/96 gün
+AXES_COOLOFF_TIME = 1/96  # 15 dakika = 1/96 gün
 
 # Bloklu denemelerde mesaj gösterilsin
-#AXES_LOCKOUT_TEMPLATE = 'registration/account_locked.html'
+AXES_LOCKOUT_TEMPLATE = 'registration/account_locked.html'
 
 ROOT_URLCONF = 'InventoryMS.urls'
 
@@ -214,7 +215,7 @@ REST_FRAMEWORK = {
     ]
 }
 AUTHENTICATION_BACKENDS = [
-    #'axes.backends.AxesStandaloneBackend',
+    'axes.backends.AxesStandaloneBackend',
     'django.contrib.auth.backends.ModelBackend',  # bu da kalmalı
 ]
 

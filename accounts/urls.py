@@ -24,8 +24,8 @@ from .views import (
     vendor_update,
     vendor_list_vulnerable,
     dashboard,
-    current_user
-    #CustomAuthToken
+    current_user,
+    CustomAuthToken
 )
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -33,7 +33,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 urlpatterns = [
     # User authentication URLs
     path('register/', user_views.register, name='user-register'),
-    #path('api-token-auth/', CustomAuthToken.as_view()),
+    path('api-token-auth/', CustomAuthToken.as_view()),
     path('login/', auth_views.LoginView.as_view(
         template_name='accounts/login.html'), name='user-login'),
     path('dashboard/', views.dashboard, name='dashboard'),
